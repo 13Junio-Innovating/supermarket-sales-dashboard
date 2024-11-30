@@ -56,7 +56,7 @@ O Streamlit fornecerá um link (geralmente algo como http://localhost:8501).
 ```
 🗂 Estrutura do Projeto
 
-```shell
+```
 supermarket-sales-dashboard/
 ├── supermarket_sales.csv   # Base de dados com informações de vendas
 ├── dashboard.py            # Código principal do dashboard
@@ -65,6 +65,7 @@ supermarket-sales-dashboard/
 ```
 
 📄 Base de Dados
+```
 O arquivo supermarket_sales.csv contém os dados utilizados no projeto.
 Principais colunas:
 Date: Data da transação.
@@ -73,11 +74,16 @@ Product line: Categoria do produto.
 Total: Faturamento total.
 Payment: Tipo de pagamento.
 Rating: Avaliação do cliente.
+```
 
 💡 Melhorias Futuras
+```
 Adicionar mais filtros (como cidade ou tipo de produto).
 Implementar download de relatórios em PDF/Excel.
 Personalizar a interface com estilos mais avançados.
+```
 
 🧑‍💻 Autor
+```
 Desenvolvido por Junio Chaves. 😊
+```
