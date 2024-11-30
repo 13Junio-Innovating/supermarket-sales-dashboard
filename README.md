@@ -21,35 +21,48 @@ Python instalado (versão 3.7 ou superior).
 Virtualenv ou outro gerenciador de ambientes virtuais (opcional, mas recomendado).
 Passos
 Clone o repositório:
-
+```shell
 git clone https://github.com/seu-usuario/supermarket-sales-dashboard.git
 cd supermarket-sales-dashboard
-(Opcional) Crie e ative um ambiente virtual:
+```
 
-bash
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-.venv\Scripts\activate     # Windows
+(Opcional) Crie e ative um ambiente virtual:
+```shell
+# Linux e Mac:
+source venv/bin/activate
+
+# Windows (PowerShell):
+.\venv\Scripts\activate
+
+# Windows (GitBash):
+source venv/Scripts/activate
+```
 Instale as dependências:
 
-bash
+```shell
 pip install -r requirements.txt
+```
+
 Execute o dashboard:
 
-bash
+```shell
 streamlit run dashboard.py
+```
+
 Acesse o dashboard no navegador:
 
 O Streamlit fornecerá um link (geralmente algo como http://localhost:8501).
 
+```
 🗂 Estrutura do Projeto
-plaintext
-Copy code
+
+```shell
 supermarket-sales-dashboard/
 ├── supermarket_sales.csv   # Base de dados com informações de vendas
 ├── dashboard.py            # Código principal do dashboard
 ├── requirements.txt        # Dependências do projeto
 └── README.md               # Documentação do projeto
+```
 
 📄 Base de Dados
 O arquivo supermarket_sales.csv contém os dados utilizados no projeto.
