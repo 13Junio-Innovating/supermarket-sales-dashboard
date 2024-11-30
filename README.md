@@ -22,8 +22,6 @@ Virtualenv ou outro gerenciador de ambientes virtuais (opcional, mas recomendado
 Passos
 Clone o repositório:
 
-bash
-Copy code
 git clone https://github.com/seu-usuario/supermarket-sales-dashboard.git
 cd supermarket-sales-dashboard
 (Opcional) Crie e ative um ambiente virtual:
