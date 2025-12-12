@@ -11,9 +11,23 @@ st.set_page_config(layout="wide")
 # Como estão as avaliações das filiais?
 
 # Carregando e processando os dados
-df = pd.read_csv("supermarket_sales.csv", sep=";", decimal=",")
-df["Date"] = pd.to_datetime(df["Date"])
-df["Month"] = df["Date"].dt.strftime("%B de %Y")
+df = pd.read_csv("supermarket_sales.csv", sep=";", decimal=",", index_col=0)
+df["Date"] = pd.to_datetime(df["Date"], format="%m/%d/%Y")
+months_pt = {
+    "January": "Janeiro",
+    "February": "Fevereiro",
+    "March": "Março",
+    "April": "Abril",
+    "May": "Maio",
+    "June": "Junho",
+    "July": "Julho",
+    "August": "Agosto",
+    "September": "Setembro",
+    "October": "Outubro",
+    "November": "Novembro",
+    "December": "Dezembro",
+}
+df["Month"] = df["Date"].dt.month_name().map(months_pt) + df["Date"].dt.strftime(" de %Y")
 df = df.sort_values("Date")
 
 # Filtros
@@ -26,7 +40,9 @@ if city != "Todas":
 
 # KPIs
 col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
-col_kpi1.metric("Faturamento Total", f"R$ {df_filtered['Total'].sum():,.2f}")
+total_faturamento = df_filtered["Total"].sum()
+valor_formatado = f"{total_faturamento:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+col_kpi1.metric("Faturamento Total", f"R$ {valor_formatado}")
 col_kpi2.metric("Vendas Totais", df_filtered.shape[0])
 col_kpi3.metric("Avaliação Média", f"{df_filtered['Rating'].mean():.2f}")
 
