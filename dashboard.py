@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from pathlib import Path
 
 st.set_page_config(layout="wide")
 
@@ -11,7 +12,12 @@ st.set_page_config(layout="wide")
 # Como estão as avaliações das filiais?
 
 # Carregando e processando os dados
-df = pd.read_csv("supermarket_sales.csv", sep=";", decimal=",", index_col=0)
+data_path = Path(__file__).parent / "supermarket_sales.csv"
+try:
+    df = pd.read_csv(data_path, sep=";", decimal=",", index_col=0)
+except Exception as e:
+    st.error("Falha ao carregar a base de dados.")
+    st.stop()
 df["Date"] = pd.to_datetime(df["Date"], format="%m/%d/%Y")
 months_pt = {
     "January": "Janeiro",
