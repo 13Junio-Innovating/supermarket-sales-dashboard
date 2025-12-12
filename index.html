@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Supermarket Sales Dashboard</title>
+    <style>
+      html, body { height: 100%; margin: 0; background: #0e1117; }
+      .wrap { height: 100%; display: flex; }
+      iframe { flex: 1; border: 0; }
+    </style>
+    <script>
+      (function(){
+        var u = 'https://supermarket-sales-dashboard.streamlit.app/';
+        var q = new URL(window.location.href).searchParams.get('src');
+        if (q) u = q;
+        window.__APP_SRC__ = u;
+      })();
+    </script>
+  </head>
+  <body>
+    <div class="wrap">
+      <iframe id="app" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
+    </div>
+    <script>
+      document.getElementById('app').src = window.__APP_SRC__;
+    </script>
+  </body>
+  </html>
