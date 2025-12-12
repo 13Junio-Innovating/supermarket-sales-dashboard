@@ -1,6 +1,6 @@
 {
   "cleanUrls": true,
-  "redirects": [
-    { "source": "/", "destination": "https://supermarket-sales-dashboard.streamlit.app/", "permanent": false }
+  "rewrites": [
+    { "source": "/", "destination": "/index.html" }
   ]
 }

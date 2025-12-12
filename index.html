@@ -4,26 +4,87 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Supermarket Sales Dashboard</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
     <style>
-      html, body { height: 100%; margin: 0; background: #0e1117; }
-      .wrap { height: 100%; display: flex; }
-      iframe { flex: 1; border: 0; }
+      :root { color-scheme: dark; }
+      html, body { height: 100%; margin: 0; background: #0e1117; color: #fafafa; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji'; }
+      .layout { display: grid; grid-template-columns: 280px 1fr; height: 100%; }
+      .sidebar { padding: 16px; background: #111827; border-right: 1px solid #1f2937; }
+      .sidebar h1 { font-size: 18px; margin: 0 0 12px; }
+      .sidebar label { display: block; font-size: 13px; margin-top: 12px; }
+      .sidebar select { width: 100%; margin-top: 6px; padding: 8px; border-radius: 6px; border: 1px solid #374151; background: #0b1220; color: #e5e7eb; }
+      .content { padding: 16px; overflow: auto; }
+      .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+      .kpi { background: #0b1220; border: 1px solid #1f2937; border-radius: 10px; padding: 14px; }
+      .kpi .label { font-size: 12px; color: #9ca3af; }
+      .kpi .value { font-size: 20px; margin-top: 6px; }
+      .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+      .charts-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+      .card { background: #0b1220; border: 1px solid #1f2937; border-radius: 10px; padding: 10px; }
+      .card h2 { font-size: 14px; margin: 0 0 8px; color: #e5e7eb; }
+      .chart { width: 100%; height: 360px; }
     </style>
-    <script>
-      (function(){
-        var u = 'https://supermarket-sales-dashboard.streamlit.app/';
-        var q = new URL(window.location.href).searchParams.get('src');
-        if (q) u = q;
-        window.__APP_SRC__ = u;
-      })();
-    </script>
   </head>
   <body>
-    <div class="wrap">
-      <iframe id="app" allow="clipboard-read; clipboard-write; fullscreen"></iframe>
+    <div class="layout">
+      <aside class="sidebar">
+        <h1>Filtros</h1>
+        <label for="month">Mês</label>
+        <select id="month"></select>
+        <label for="city">Cidade</label>
+        <select id="city"></select>
+      </aside>
+      <main class="content">
+        <section class="kpis">
+          <div class="kpi"><div class="label">Faturamento Total</div><div id="kpi-total" class="value"></div></div>
+          <div class="kpi"><div class="label">Vendas Totais</div><div id="kpi-vendas" class="value"></div></div>
+          <div class="kpi"><div class="label">Avaliação Média</div><div id="kpi-rating" class="value"></div></div>
+        </section>
+        <section class="charts">
+          <div class="card"><h2>Faturamento por dia</h2><div id="chart-date" class="chart"></div></div>
+          <div class="card"><h2>Faturamento por tipo de produto</h2><div id="chart-prod" class="chart"></div></div>
+        </section>
+        <section class="charts-3">
+          <div class="card"><h2>Faturamento por filial</h2><div id="chart-city" class="chart"></div></div>
+          <div class="card"><h2>Faturamento por tipo de pagamento</h2><div id="chart-pay" class="chart"></div></div>
+          <div class="card"><h2>Avaliação Média por Filial</h2><div id="chart-rate" class="chart"></div></div>
+        </section>
+      </main>
     </div>
     <script>
-      document.getElementById('app').src = window.__APP_SRC__;
+      const RAW_URL = 'https://raw.githubusercontent.com/13Junio-Innovating/supermarket-sales-dashboard/main/supermarket_sales.csv';
+      const monthsPT = { 'January':'Janeiro','February':'Fevereiro','March':'Março','April':'Abril','May':'Maio','June':'Junho','July':'Julho','August':'Agosto','September':'Setembro','October':'Outubro','November':'Novembro','December':'Dezembro' };
+      const fmtBRL = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+      const monthSel = document.getElementById('month');
+      const citySel = document.getElementById('city');
+      function parseNumberBR(v){ if(v==null||v==='') return 0; let s=String(v).replace(/\./g,'').replace(',', '.'); return Number(s); }
+      function toDate(s){ const d = new Date(s); return d; }
+      function monthLabel(d){ const en = d.toLocaleString('en-US',{month:'long'}); return monthsPT[en] + d.toLocaleString('pt-BR',{year:'numeric', month: undefined}).replace(/^[0-9]{4}$/,' de $&'); }
+      function groupSum(arr, key){ const m=new Map(); for(const r of arr){ const k=r[key]; m.set(k,(m.get(k)||0)+r.Total); } return Array.from(m,([k,v])=>({key:k,value:v})); }
+      function groupAvg(arr, key, val){ const m=new Map(); for(const r of arr){ const k=r[key]; const a=m.get(k)||{s:0,c:0}; a.s+=r[val]; a.c++; m.set(k,a); } return Array.from(m,([k,a])=>({key:k,value:a.s/a.c})); }
+      function draw(all){ const months = Array.from(new Set(all.map(r=>r.Month))); monthSel.innerHTML = months.map(m=>`<option value="${m}">${m}</option>`).join(''); const cities = ['Todas',...Array.from(new Set(all.map(r=>r.City)))]; citySel.innerHTML = cities.map(c=>`<option value="${c}">${c}</option>`).join(''); function refresh(){ const month = monthSel.value||months[0]; const city = citySel.value||'Todas'; let data = all.filter(r=>r.Month===month); if(city!=='Todas') data = data.filter(r=>r.City===city);
+          document.getElementById('kpi-total').textContent = fmtBRL.format(data.reduce((s,r)=>s+r.Total,0));
+          document.getElementById('kpi-vendas').textContent = String(data.length);
+          const avg = data.length? (data.reduce((s,r)=>s+r.Rating,0)/data.length) : 0; document.getElementById('kpi-rating').textContent = avg.toFixed(2);
+          const byDate = data.slice().sort((a,b)=>a.Date-b.Date);
+          Plotly.newPlot('chart-date',[{x:byDate.map(r=>r.Date),y:byDate.map(r=>r.Total),type:'bar',marker:{color:'#60a5fa'},text:byDate.map(r=>r.City)}],{margin:{l:40,r:10,t:10,b:40},paper_bgcolor:'#0b1220',plot_bgcolor:'#0b1220'});
+          const byProd = groupSum(data,'Product line').sort((a,b)=>b.value-a.value);
+          Plotly.newPlot('chart-prod',[{x:byProd.map(r=>r.value),y:byProd.map(r=>r.key),type:'bar',orientation:'h'}],{margin:{l:120,r:10,t:10,b:40},paper_bgcolor:'#0b1220',plot_bgcolor:'#0b1220'});
+          const byCity = groupSum(data,'City');
+          Plotly.newPlot('chart-city',[{x:byCity.map(r=>r.key),y:byCity.map(r=>r.value),type:'bar'}],{margin:{l:40,r:10,t:10,b:40},paper_bgcolor:'#0b1220',plot_bgcolor:'#0b1220'});
+          const byPay = groupSum(data,'Payment');
+          Plotly.newPlot('chart-pay',[{labels:byPay.map(r=>r.key),values:byPay.map(r=>r.value),type:'pie'}],{paper_bgcolor:'#0b1220'});
+          const rateCity = groupAvg(data,'City','Rating');
+          Plotly.newPlot('chart-rate',[{x:rateCity.map(r=>r.key),y:rateCity.map(r=>r.value),type:'bar'}],{margin:{l:40,r:10,t:10,b:40},paper_bgcolor:'#0b1220',plot_bgcolor:'#0b1220'});
+        }
+        monthSel.onchange = refresh; citySel.onchange = refresh; refresh(); }
+      async function load(){ const res = await fetch(RAW_URL,{cache:'no-store'}); if(!res.ok){ document.body.innerHTML = '<div style="padding:24px;color:#fff">Falha ao carregar dados (HTTP '+res.status+').</div>'; return; } const txt = await res.text(); const parsed = Papa.parse(txt,{header:true,delimiter:';'}); const rows = parsed.data.filter(r=>r && r.Date && r.Total);
+        const all = rows.map(r=>{ const d = toDate(r.Date); const month = monthsPT[d.toLocaleString('en-US',{month:'long'})] + ' de ' + d.getFullYear(); return { Date:d, Month:month, City:r.City, 'Product line':r['Product line'], Total:parseNumberBR(r.Total), Payment:r.Payment, Rating:Number(r.Rating) } });
+        draw(all);
+      }
+      load();
     </script>
   </body>
   </html>
