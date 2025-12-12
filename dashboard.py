@@ -13,11 +13,23 @@ st.set_page_config(layout="wide")
 
 # Carregando e processando os dados
 data_path = Path(__file__).parent / "supermarket_sales.csv"
-try:
-    df = pd.read_csv(data_path, sep=";", decimal=",", index_col=0)
-except Exception as e:
-    st.error("Falha ao carregar a base de dados.")
-    st.stop()
+df = None
+if data_path.exists():
+    try:
+        df = pd.read_csv(data_path, sep=";", decimal=",", index_col=0)
+    except Exception:
+        st.error("Falha ao carregar a base local.")
+        st.stop()
+else:
+    uploaded = st.file_uploader("Carregar arquivo CSV", type=["csv"]) 
+    if uploaded is None:
+        st.info("Envie o arquivo 'supermarket_sales.csv' para iniciar.")
+        st.stop()
+    try:
+        df = pd.read_csv(uploaded, sep=";", decimal=",", index_col=0)
+    except Exception:
+        st.error("Falha ao ler o CSV enviado.")
+        st.stop()
 df["Date"] = pd.to_datetime(df["Date"], format="%m/%d/%Y")
 months_pt = {
     "January": "Janeiro",
